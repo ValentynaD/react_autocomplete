@@ -35,25 +35,17 @@ export const App: React.FC<AppProps> = ({ delay = 300, onSelected }) => {
 
   const filteredPeople = useMemo(() => {
     const normalized = debouncedSearchInput.trim().toLowerCase();
-
-    return peopleFromServer.filter(person =>
+    return normalized ? peopleFromServer.filter(person =>
       person.name.toLowerCase().includes(normalized),
-    );
+    ) : [];
   }, [debouncedSearchInput]);
-
-  const updateTitle = (newTitle: string) => {
-    setTitle(newTitle);
-    requestAnimationFrame(() => {
-      document.title = newTitle;
-    });
-  };
 
   const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-
     setSearchInput(value);
+    // Завжди скидаємо вибрану особу та встановлюємо заголовок на "No selected person" при зміні введення
     setSelectedPerson(null);
-    updateTitle('No selected person');
+    setTitle('No selected person');
   };
 
   const handleSelectPerson = (person: Person) => {
@@ -65,16 +57,17 @@ export const App: React.FC<AppProps> = ({ delay = 300, onSelected }) => {
     ) {
       setSelectedPerson(person);
       setSearchInput(person.name);
-      updateTitle(`${person.name} (${person.born} - ${person.died})`);
+      setTitle(`${person.name} (${person.born} - ${person.died})`);
       onSelected?.(person);
     } else {
       setSelectedPerson(null);
-      updateTitle('No selected person');
+      setTitle('No selected person');
     }
   };
 
   useEffect(() => {
     if (selectedPerson) {
+      // Можна додати тут додаткову логіку, якщо потрібно
     }
   }, [selectedPerson]);
 
@@ -83,6 +76,11 @@ export const App: React.FC<AppProps> = ({ delay = 300, onSelected }) => {
       focusRef.current.focus();
     }
   }, []);
+
+  // Оновлюємо document.title через useEffect
+  useEffect(() => {
+    document.title = title;
+  }, [title]);
 
   return (
     <div className="container">
@@ -142,8 +140,7 @@ export const App: React.FC<AppProps> = ({ delay = 300, onSelected }) => {
             filteredPeople.length === 0 &&
             searchInput.trim() !== '' && (
               <div
-                className="notification is-danger is-light
-              mt-3 is-align-self-flex-start"
+                className="notification is-danger is-light mt-3 is-align-self-flex-start"
                 role="alert"
                 data-cy="no-suggestions-message"
               >
